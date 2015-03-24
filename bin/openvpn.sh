@@ -10,12 +10,12 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-apt-get update -q
+apt-get update -qqy
 debconf-set-selections <<EOF
 iptables-persistent iptables-persistent/autosave_v4 boolean true
 iptables-persistent iptables-persistent/autosave_v6 boolean true
 EOF
-apt-get install -qy openvpn curl iptables-persistent
+apt-get install -qqy openvpn curl iptables-persistent
 
 cd /etc/openvpn
 

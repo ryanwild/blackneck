@@ -1,0 +1,80 @@
+{
+  "variables": {
+    "root_password": null,
+    "deploy_user_password": null,
+    "deploy_ssh_key_file": null,
+    "digital_ocean_key": null,
+    "admin_email": null
+  },
+  "builders": [
+    {
+      "api_token": "{{user `digital_ocean_key`}}",
+      "type": "digitalocean",
+      "region": "lon1",
+      "size": "512mb",
+      "image": "ubuntu-14-04-x64",
+      "api_url": "https://api.digitalocean.com",
+      "snapshot_name": "OpenVPN Server {{isotime \"2006-01-02\"}} - {{timestamp}}",
+      "droplet_name": "vpn",
+      "private_networking": "false",
+      "ssh_port": "22"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": "echo 'root:{{user `root_password`}}' | chpasswd"
+    },
+    {
+      "type": "shell",
+      "script": "bin/upgrades.sh"
+    },
+    {
+      "type": "shell",
+      "script": "bin/deploy-user.sh"
+    },
+    {
+      "type": "shell",
+      "inline": "echo 'deploy:{{user `deploy_user_password`}}' | chpasswd"
+    },
+    {
+      "type": "file",
+      "source": "{{user `deploy_ssh_key_file`}}",
+      "destination": "/home/deploy/.ssh/authorized_keys"
+    },
+    {
+      "type": "shell",
+      "script": "bin/ssh.sh"
+    },
+    {
+      "type": "shell",
+      "script": "bin/fail2ban.sh"
+    },
+    {
+      "type": "shell",
+      "script": "bin/logwatch.sh",
+      "environment_vars": [
+        "ADMIN_EMAIL={{user `admin_email`}}"
+      ]
+    },
+    {
+      "type": "shell",
+      "script": "bin/openvpn.sh"
+    },
+    {
+      "type": "shell",
+      "script": "bin/permission.sh"
+    },
+    {
+      "type": "shell",
+      "script": "bin/ufw.sh"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sleep 120",
+        "sync"
+      ]
+    }
+  ]
+}
